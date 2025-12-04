@@ -17,7 +17,7 @@ public class PersistenceFilterVerticle extends AbstractVerticle {
     public void start(Promise<Void> startPromise) {
 
         // Este consumidor escucha las órdenes ya procesadas (pricing + fraude)
-        vertx.eventBus().consumer("DIRECCION", message -> {
+        vertx.eventBus().consumer("order.persist", message -> {
             JsonObject json = (JsonObject) message.body();
 
             vertx.executeBlocking(promise -> {

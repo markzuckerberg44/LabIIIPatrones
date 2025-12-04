@@ -120,7 +120,7 @@
                     <windowtitle>Evaluacion I II-2025</windowtitle>
                     <show>private</show>
                     <doclint>none</doclint>
-                    <source>23</source> <!-- o 11/8 según tu proyecto -->
+                    <source>17</source> <!-- o 11/8 según tu proyecto -->
                     <charset>UTF-8</charset>
                     <encoding>UTF-8</encoding>
                 </configuration>
@@ -130,7 +130,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <release>23</release>
+                    <release>17</release>
                 </configuration>
             </plugin>
             <plugin>
