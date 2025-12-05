@@ -16,7 +16,7 @@ public class FraudCheckFilterVerticle extends AbstractVerticle {
             String paymentMethod = json.getString("paymentMethod");
             JsonArray items = json.getJsonArray("items");
 
-            if (total > 200000 && "CREDIT_CARD".equals(paymentMethod)) {
+            if (total > 200000 && "TARJETA_CREDITO".equals(paymentMethod)) {
                 json.put("status", "REVISION");
                 System.out.println("[FRAUD] Orden sospechosa (monto alto): " + json.getString("orderId"));
             } else if (items.size() > 20) {

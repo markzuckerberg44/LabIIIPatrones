@@ -37,15 +37,25 @@ public class PersistenceFilterVerticle extends AbstractVerticle {
         });
         startPromise.complete();
     }
+    
 
     private void persistOrder(JsonObject json) {
-
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
 
-            Order order = new Order();
-            order.setOrderId(json.getString("orderId"));
+            String orderId = json.getString("orderId");
+
+            // 1. INTENTAR CARGAR LA ORDEN EXISTENTE
+            Order order = em.find(Order.class, orderId);
+
+            // Si la orden no existe, la creamos
+            if (order == null) {
+                order = new Order();
+                order.setOrderId(orderId);
+            }
+
+            // 2. ACTUALIZAR TODOS LOS CAMPOS
             order.setCustomerId(json.getString("customerId"));
             order.setCurrency(json.getString("currency"));
             order.setPaymentMethod(json.getString("paymentMethod"));
@@ -54,34 +64,42 @@ public class PersistenceFilterVerticle extends AbstractVerticle {
             order.setTotal(json.getLong("total"));
             order.setStatus(json.getString("status"));
 
-            // timestamp tipo String ISO → Instant
             String ts = json.getString("timestamp");
             if (ts != null) {
                 order.setTimestamp(Instant.parse(ts));
             }
 
-            // Items
+            // 3. ACTUALIZAR ITEMS
+
+            // Es crucial limpiar los items antiguos si estás re-procesando
+            // Esto depende del orphanRemoval=true y CascadeType.ALL
+            order.getItems().clear();
+
             JsonArray itemsArray = json.getJsonArray("items");
             if (itemsArray != null) {
+                Order finalOrder = order;
                 itemsArray.forEach(obj -> {
                     JsonObject itemJson = (JsonObject) obj;
                     OrderItem item = new OrderItem();
                     item.setProductId(itemJson.getString("productId"));
                     item.setQuantity(itemJson.getInteger("quantity"));
                     item.setUnitPrice(itemJson.getLong("unitPrice"));
-                    item.setOrder(order);           // relación ManyToOne
-                    order.getItems().add(item);     // relación OneToMany
+
+                    // Mapeo bidireccional
+                    item.setOrder(finalOrder);
+                    finalOrder.getItems().add(item);
                 });
             }
 
-            em.persist(order);
+            // 4. USAR MERGE (ya sea nueva o existente)
+            em.merge(order);
             em.getTransaction().commit();
 
         } catch (Exception e) {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            throw e;
+            throw new RuntimeException("Error en persistencia para orden " + json.getString("orderId"), e);
         } finally {
             em.close();
         }

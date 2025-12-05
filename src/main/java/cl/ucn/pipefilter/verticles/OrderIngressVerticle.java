@@ -26,10 +26,10 @@ public class OrderIngressVerticle extends AbstractVerticle {
                 .put("couponCode", "DESCUENTO10")
                 .put("currency", "CLP")
                 .put("timestamp", "2025-11-20T12:34:56Z")
-                .put("paymentMethod", "CREDIT_CARD");
+                .put("paymentMethod", "TARJETA_CREDITO");
 
             vertx.eventBus().send("order.raw", order1);
-            System.out.println("[INGRESS] Orden enviada: " + order1.getString("orderId"));
+            System.out.println("[INGRESS] Orden enviada: " + order1.encodePrettily());
 
             JsonObject order2 = new JsonObject()
                 .put("orderId", "ORD-002")
@@ -37,15 +37,15 @@ public class OrderIngressVerticle extends AbstractVerticle {
                 .put("items", new JsonArray()
                     .add(new JsonObject()
                         .put("productId", "PROD-C")
-                        .put("quantity", 10)
+                        .put("quantity", 2)
                         .put("unitPrice", 30000)))
                 .put("couponCode", "DESCUENTO20")
                 .put("currency", "CLP")
                 .put("timestamp", "2025-11-20T13:00:00Z")
-                .put("paymentMethod", "CREDIT_CARD");
+                .put("paymentMethod", "TARJETA_CREDITO");
 
             vertx.eventBus().send("order.raw", order2);
-            System.out.println("[INGRESS] Orden enviada: " + order2.getString("orderId"));
+            System.out.println("[INGRESS] Orden enviada: " + order2.encodePrettily());
         });
 
         startPromise.complete();
