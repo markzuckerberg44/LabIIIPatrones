@@ -201,26 +201,6 @@ El proyecto implementa 6 verticles que conforman el pipeline completo:
 - order.persist: Órdenes listas para persistir
 - order.error: Órdenes rechazadas por validación
 
-### Tecnologías utilizadas
-
-- Java 17
-- Vert.x 4.5.15 (EventBus y Verticles)
-- Hibernate 7.0.0.Final con JPA
-- SQLite 3.49.1
-- Maven para gestión de dependencias
-
-### Ejecución
-
-Compilar el proyecto:
-```
-mvn clean compile
-```
-
-Ejecutar la aplicación:
-```
-mvn exec:java -Dexec.mainClass=cl.ucn.pipefilter.main.MainVerticle
-```
-
 ### Problema encontrado durante el desarrollo
 
 Durante las pruebas se detectó que los items de las órdenes no aparecían en la salida, aunque las órdenes sí se guardaban en la base de datos.
