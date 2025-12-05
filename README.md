@@ -1,5 +1,5 @@
 # Laboratorio III: Arquitectura Pipe & Filter <br> Profesor: Daniel San Martín <br> Patrones de Software y Programación.
-
+Mauricio Muñoz 21542213-5 / Julian Honores 21328088-0
 
 ---
 
