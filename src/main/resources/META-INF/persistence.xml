@@ -21,9 +21,6 @@
 
             <!-- Crear esquema en cada arranque (desde las entidades) -->
             <property name="hibernate.hbm2ddl.auto" value="update"/>
-
-            <!-- IMPORTAR datos desde este script del classpath -->
-            <property name="hibernate.hbm2ddl.import_files" value="data.sql"/>
         </properties>
     </persistence-unit>
 </persistence>

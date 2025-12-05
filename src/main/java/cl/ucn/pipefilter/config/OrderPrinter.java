@@ -15,7 +15,7 @@ public class OrderPrinter {
             em.getTransaction().begin();
 
             List<Order> orders = em
-                    .createQuery("SELECT o FROM Order o", Order.class)
+                    .createQuery("SELECT DISTINCT o FROM Order o LEFT JOIN FETCH o.items", Order.class)
                     .getResultList();
 
             System.out.println("===== ÓRDENES EN LA BASE DE DATOS =====");

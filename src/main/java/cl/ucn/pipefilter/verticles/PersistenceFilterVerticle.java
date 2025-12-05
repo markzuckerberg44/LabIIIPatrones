@@ -45,54 +45,76 @@ public class PersistenceFilterVerticle extends AbstractVerticle {
             em.getTransaction().begin();
 
             String orderId = json.getString("orderId");
-
-            // 1. INTENTAR CARGAR LA ORDEN EXISTENTE
             Order order = em.find(Order.class, orderId);
 
-            // Si la orden no existe, la creamos
             if (order == null) {
                 order = new Order();
                 order.setOrderId(orderId);
+                order.setCustomerId(json.getString("customerId"));
+                order.setCurrency(json.getString("currency"));
+                order.setPaymentMethod(json.getString("paymentMethod"));
+                order.setSubtotal(json.getLong("subtotal"));
+                order.setDiscount(json.getLong("discount"));
+                order.setTotal(json.getLong("total"));
+                order.setStatus(json.getString("status"));
+
+                String ts = json.getString("timestamp");
+                if (ts != null) {
+                    order.setTimestamp(Instant.parse(ts));
+                }
+
+                JsonArray itemsArray = json.getJsonArray("items");
+                if (itemsArray != null) {
+                    System.out.println("[DEBUG] Procesando " + itemsArray.size() + " items para orden " + orderId);
+                    for (int i = 0; i < itemsArray.size(); i++) {
+                        JsonObject itemJson = itemsArray.getJsonObject(i);
+                        OrderItem item = new OrderItem();
+                        item.setProductId(itemJson.getString("productId"));
+                        item.setQuantity(itemJson.getInteger("quantity"));
+                        item.setUnitPrice(itemJson.getLong("unitPrice"));
+                        item.setOrder(order);
+                        order.getItems().add(item);
+                        System.out.println("[DEBUG] Item agregado: " + itemJson.getString("productId"));
+                    }
+                } else {
+                    System.out.println("[DEBUG] No hay items para orden " + orderId);
+                }
+
+                em.persist(order);
+                System.out.println("[DEBUG] Orden persistida con " + order.getItems().size() + " items");
+            } else {
+                order.setCustomerId(json.getString("customerId"));
+                order.setCurrency(json.getString("currency"));
+                order.setPaymentMethod(json.getString("paymentMethod"));
+                order.setSubtotal(json.getLong("subtotal"));
+                order.setDiscount(json.getLong("discount"));
+                order.setTotal(json.getLong("total"));
+                order.setStatus(json.getString("status"));
+
+                String ts = json.getString("timestamp");
+                if (ts != null) {
+                    order.setTimestamp(Instant.parse(ts));
+                }
+
+                order.getItems().clear();
+                em.flush();
+
+                JsonArray itemsArray = json.getJsonArray("items");
+                if (itemsArray != null) {
+                    for (int i = 0; i < itemsArray.size(); i++) {
+                        JsonObject itemJson = itemsArray.getJsonObject(i);
+                        OrderItem item = new OrderItem();
+                        item.setProductId(itemJson.getString("productId"));
+                        item.setQuantity(itemJson.getInteger("quantity"));
+                        item.setUnitPrice(itemJson.getLong("unitPrice"));
+                        item.setOrder(order);
+                        order.getItems().add(item);
+                    }
+                }
+
+                em.merge(order);
             }
 
-            // 2. ACTUALIZAR TODOS LOS CAMPOS
-            order.setCustomerId(json.getString("customerId"));
-            order.setCurrency(json.getString("currency"));
-            order.setPaymentMethod(json.getString("paymentMethod"));
-            order.setSubtotal(json.getLong("subtotal"));
-            order.setDiscount(json.getLong("discount"));
-            order.setTotal(json.getLong("total"));
-            order.setStatus(json.getString("status"));
-
-            String ts = json.getString("timestamp");
-            if (ts != null) {
-                order.setTimestamp(Instant.parse(ts));
-            }
-
-            // 3. ACTUALIZAR ITEMS
-
-            // Es crucial limpiar los items antiguos si estás re-procesando
-            // Esto depende del orphanRemoval=true y CascadeType.ALL
-            order.getItems().clear();
-
-            JsonArray itemsArray = json.getJsonArray("items");
-            if (itemsArray != null) {
-                Order finalOrder = order;
-                itemsArray.forEach(obj -> {
-                    JsonObject itemJson = (JsonObject) obj;
-                    OrderItem item = new OrderItem();
-                    item.setProductId(itemJson.getString("productId"));
-                    item.setQuantity(itemJson.getInteger("quantity"));
-                    item.setUnitPrice(itemJson.getLong("unitPrice"));
-
-                    // Mapeo bidireccional
-                    item.setOrder(finalOrder);
-                    finalOrder.getItems().add(item);
-                });
-            }
-
-            // 4. USAR MERGE (ya sea nueva o existente)
-            em.merge(order);
             em.getTransaction().commit();
 
         } catch (Exception e) {

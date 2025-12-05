@@ -12,7 +12,7 @@ public class OrderIngressVerticle extends AbstractVerticle {
         
         vertx.setTimer(2000, id -> {
             JsonObject order1 = new JsonObject()
-                .put("orderId", "ORD-001")
+                .put("orderId", "ORD-003")
                 .put("customerId", "CUST-123")
                 .put("items", new JsonArray()
                     .add(new JsonObject()
@@ -32,7 +32,7 @@ public class OrderIngressVerticle extends AbstractVerticle {
             System.out.println("[INGRESS] Orden enviada: " + order1.encodePrettily());
 
             JsonObject order2 = new JsonObject()
-                .put("orderId", "ORD-002")
+                .put("orderId", "ORD-004")
                 .put("customerId", "CUST-456")
                 .put("items", new JsonArray()
                     .add(new JsonObject()

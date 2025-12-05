@@ -179,3 +179,71 @@ OrderIngress → ValidationFilter → PricingFilter → FraudCheckFilter → Per
 - unitPrice
 
 ---
+
+## Implementación
+
+### Estructura del proyecto
+
+El proyecto implementa 6 verticles que conforman el pipeline completo:
+
+- OrderIngressVerticle: Genera órdenes de prueba y las envía al canal order.raw
+- ValidationFilterVerticle: Valida campos obligatorios y reglas de negocio
+- PricingFilterVerticle: Calcula subtotal, aplica descuentos según cupones y calcula total
+- FraudCheckFilterVerticle: Detecta órdenes sospechosas por monto o cantidad de items
+- PersistenceFilterVerticle: Persiste las órdenes en base de datos SQLite usando JPA
+- OrderPrinterVerticle: Lee e imprime todas las órdenes almacenadas
+
+### Canales EventBus utilizados
+
+- order.raw: Órdenes sin validar
+- order.validated: Órdenes validadas
+- order.priced: Órdenes con precios calculados
+- order.persist: Órdenes listas para persistir
+- order.error: Órdenes rechazadas por validación
+
+### Tecnologías utilizadas
+
+- Java 17
+- Vert.x 4.5.15 (EventBus y Verticles)
+- Hibernate 7.0.0.Final con JPA
+- SQLite 3.49.1
+- Maven para gestión de dependencias
+
+### Ejecución
+
+Compilar el proyecto:
+```
+mvn clean compile
+```
+
+Ejecutar la aplicación:
+```
+mvn exec:java -Dexec.mainClass=cl.ucn.pipefilter.main.MainVerticle
+```
+
+### Problema encontrado durante el desarrollo
+
+Durante las pruebas se detectó que los items de las órdenes no aparecían en la salida, aunque las órdenes sí se guardaban en la base de datos.
+
+Análisis del problema:
+- Se verificó mediante consultas SQL directas que los items sí estaban guardados físicamente
+- Al revisar la tabla order_items se descubrió que algunos registros tenían id con valor NULL
+- La tabla fue creada sin la propiedad AUTOINCREMENT en SQLite
+
+Causa raíz:
+- JPA requiere que todas las entidades tengan un valor válido en su campo @Id
+- SQLite no genera IDs automáticamente si la tabla no tiene AUTOINCREMENT
+- Hibernate ignora filas con id NULL porque no puede instanciar entidades sin clave primaria
+
+Solución aplicada:
+- Se recreó la tabla order_items con INTEGER PRIMARY KEY AUTOINCREMENT
+- Se preservaron las órdenes existentes con IDs válidos
+- Se eliminaron las órdenes con items sin ID
+- Se modificó OrderPrinter para usar JOIN FETCH y cargar items eagerly
+
+Resultado:
+- Los nuevos items se guardan con IDs autogenerados correctamente
+- Las órdenes muestran todos sus items al consultar la base de datos
+- El pipeline completo funciona según las especificaciones
+
+---
